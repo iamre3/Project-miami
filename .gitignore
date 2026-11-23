@@ -1,0 +1,20 @@
+# Build and binary outputs
+out/
+bin/
+*.exe
+*.obj
+*.lib
+*.exp
+*.pdb
+*.ilk
+
+# User-specific runtime files
+*.log
+*.ini
+!default_config.ini
+
+# System & IDE files
+.vs/
+*.user
+*.suo
+.vscode/
