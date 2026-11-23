@@ -53,7 +53,7 @@ cl /nologo /O2 /W3 /std:c++20 /EHa /MD /utf-8 /DNOMINMAX ^
    %LEONIDA_SRCS% ^
    /Fe:"%OUT%\ProjectMiami.exe" /Fo"%OUT%\obj\\" ^
    /link /SUBSYSTEM:WINDOWS ^
-   user32.lib gdi32.lib shell32.lib ole32.lib comctl32.lib d2d1.lib dwrite.lib windowscodecs.lib dxgi.lib d3d12.lib d3dcompiler.lib xinput.lib winmm.lib advapi32.lib
+   user32.lib gdi32.lib shell32.lib ole32.lib comctl32.lib d2d1.lib dwrite.lib windowscodecs.lib dxgi.lib d3d12.lib d3dcompiler.lib xinput.lib winmm.lib advapi32.lib dwmapi.lib
 
 if errorlevel 1 (
     echo [ERROR] Failed to compile ProjectMiami.exe
