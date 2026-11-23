@@ -1,106 +1,70 @@
 # PROJECT MIAMI
 ### Standalone PC Game Launcher for Grand Theft Auto VI
-**Platform:** Windows 10/11 x64  
-**Design Direction:** Modern PC Gaming Launcher (Obsidian, Miami Cyan `#00f2fe`, Sunset Pink `#e8507a`)  
-**Graphics Presentation:** Direct2D, DirectWrite, WIC, DXGI (Hardware-accelerated 60 FPS)
+
+**Project Miami** is a dedicated Windows PC launcher engineered to manage configuration, presentation, and execution of Grand Theft Auto VI on PC. It delivers a modern desktop interface inspired by contemporary PC gaming releases, free from console dashboard layouts, emulator menus, fake statistics, or developer clutter.
 
 ---
 
-## 1. Product Overview
+## How It Works
 
-**Project Miami** is an independent, production-quality Windows PC game launcher designed from scratch. It delivers a modern, cinematic interface that prioritizes the game itself, free from console dashboard layouts, emulator menus, fake statistics, or developer clutter.
+Project Miami acts as the central bridge between the game installation, underlying compatibility layers, and your PC hardware:
 
-### Core Architecture & Multi-Layer System
-Project Miami coordinates three specialized compatibility and recompilation layers:
-1. **XENITH Core Subsystems (`e:\XENITH`):** PE32+ loader, GDK Game Core runtime shims (`xgameruntime.dll`, `xmem.dll`), memory pool management (`MEM_GRAPHICS`), and Direct3D 12 device creation.
-2. **Leonida Recompilation Framework (`e:\XENITH\references\Leonida`):** RDNA2-to-SPIR-V shader translation toolchain, AWC audio extractors, BCPack texture decompression, and static recompilation engine.
-3. **GTA6-COMPAT-LAYER (`e:\XENITH\references\GTA6-COMPAT-LAYER`):** Xbox Series Scarlett architecture headers (`scarlett.h`), module DEF ordinal exports (`d3d12_xs.def`, `gameinput.def`, etc.), and HLE registry bindings.
-- **Cinematic Home Screen:** High-impact background, game title, installation status badge, metadata panel, and a primary **"Play Now"** action.
-- **Streamlined Setup Wizard (5 Steps):**
-  1. *Welcome:* Clean brand introduction.
-  2. *Folder Selection:* Native Windows folder picker (`SHBrowseForFolder`).
-  3. *Validation:* Honest inspection of directory existence and executable detection.
-  4. *Configuration:* Automatic generation of safe default preferences.
-  5. *Completion:* Confirmation and seamless transition to the main launcher.
-- **Genuine Settings System:** Two-column desktop layout (Sidebar categories on left, preferences on right) covering Display, Performance (Target FPS, VSync, Frame Pacing), Audio, Input (Controller / Keyboard-Mouse), and System.
-- **Integrated Game Library:** Clean grid layout of installed titles with artwork previews and selection support.
-- **Modular Compatibility Adapter:** Decoupled runtime bridge interface (`ICompatibilityAdapter`) allowing runtime adapters like Leonida to be integrated without coupling to UI code.
-- **Process Manager:** Non-blocking child process launcher with live PID tracking, uptime recording, and error reporting.
+1. **System & Asset Validation:**  
+   During initial setup, the launcher inspects your selected game directory to verify that the required master executable and game data packages are present and intact. It will not allow launching unless authentic game files are detected.
+
+2. **Multi-Layer Runtime Coordination:**  
+   The launcher coordinates three specialized subsystems behind the scenes:
+   - **Game Core Compatibility Layer:** Binds system runtime interfaces, manages memory pool allocations, and orchestrates Direct3D 12 device creation.
+   - **Static Recompilation Framework:** Translates console GPU shaders into native desktop SPIR-V and Direct3D 12 bytecode, deswizzles textures, and unpacks multi-channel audio.
+   - **Architecture Layer:** Provides system ordinal definitions and hardware abstraction shims for native Windows execution.
+
+3. **Direct2D Hardware-Accelerated Presentation:**  
+   The interface is rendered natively using Direct2D and DirectWrite at 60 FPS with responsive resizing, custom window controls, and atmospheric visual styling.
+
+4. **Lifecycle & Process Management:**  
+   Launches the game as a monitored child process with live status polling, heartbeat tracking, and crash-guard isolation.
 
 ---
 
-## 2. Directory Structure
+## Features
 
-```
-e:\ProjectMiami\
-├── .git\                    # Local Git repository (Author: iamre3)
-├── .gitignore               # Excludes binaries, build artifacts, and logs
-├── assets\
-│   └── images\              # High-resolution launcher backgrounds & branding
-├── include\
-│   └── miami\
-│       ├── app.h            # Main application coordinator
-│       ├── config.h         # INI configuration serializer & logger
-│       ├── installer.h      # Installation directory validator
-│       ├── integration.h    # Modular compatibility runtime adapter interface
-│       ├── library.h        # Game library model and catalog
-│       ├── process.h        # Windows process lifecycle manager
-│       └── renderer.h       # Direct2D/DirectWrite rendering system
-├── out\
-│   ├── ProjectMiami.exe     # Standalone PC launcher executable
-│   └── test_miami.exe       # Automated 24-assertion test suite
-├── src\
-│   ├── config\config.cpp
-│   ├── core\app.cpp
-│   ├── core\integration.cpp
-│   ├── core\library.cpp
-│   ├── core\main.cpp        # WinMain entry point & message loop
-│   ├── install\installer.cpp
-│   ├── process\process.cpp
-│   └── ui\renderer.cpp      # Direct2D PC interface implementation
-├── tests\
-│   └── test_miami.cpp       # Unit & integration test runner
-├── build.bat                # One-click MSVC x64 build script
-└── README.md
-```
+- **Cinematic Home Screen:** High-impact visual presentation centered around Grand Theft Auto VI with an interactive **Play Now** action.
+- **5-Step Setup Wizard:**
+  - *Welcome:* Introduction to the launcher.
+  - *Folder Selection:* Native folder picker to locate game files.
+  - *Verification:* Genuine detection of required files.
+  - *Configuration:* Safe default preferences.
+  - *Completion:* Direct entry into the launcher.
+- **Dedicated Settings:** Two-column layout with category selection on the left and preferences on the right (Display, Performance, Audio, Input, and System).
+- **Game Library:** Clean grid layout of installed titles with artwork previews and selection support.
+- **Persistent Preferences:** User settings and display configurations are automatically saved and restored across sessions.
 
 ---
 
-## 3. How to Build & Run
+## Instructions
 
-### Prerequisites
-- Windows 10/11 x64
-- MSVC x64 (Visual Studio 2022 or Build Tools)
-- Windows SDK (`d2d1.lib`, `dwrite.lib`, `windowscodecs.lib`, `dxgi.lib`)
+### Building the Launcher
+1. Open a Command Prompt or PowerShell terminal.
+2. Run the build script:
+   ```cmd
+   build.bat
+   ```
+3. The build script automatically locates the MSVC compiler, compiles the launcher executable, and runs the automated test suite.
 
-### Building
-Run `build.bat` in Command Prompt or PowerShell:
+### Running the Launcher
+After building, run:
 ```cmd
-cmd.exe /c "e:\ProjectMiami\build.bat"
+ProjectMiami.exe
 ```
-This compiles `ProjectMiami.exe`, builds `test_miami.exe`, and runs the verification suite.
 
-### Launching
-Run the generated executable:
-```cmd
-e:\ProjectMiami\out\ProjectMiami.exe
-```
+### First-Time Configuration
+1. On first launch, follow the guided setup wizard.
+2. Browse to and select your Grand Theft Auto VI installation folder.
+3. Once the launcher confirms the required files, complete setup to enter the main dashboard.
+4. Click **Play Now** to start the game, or customize your resolution and controls in **Settings**.
 
 ---
 
-## 4. Automated Verification Suite
+## License & Attribution
 
-The test suite (`out\test_miami.exe`) executes 24 honest assertions:
-1. **Configuration Persistence & Recovery:** INI serialization, resolution persistence, and graceful recovery from corrupt syntax.
-2. **Directory Validation:** Non-existent folder rejection, executable inspection, and file size checks.
-3. **Library Management:** Catalog queries, active game selection, and invalid ID rejection.
-4. **Process Manager:** Launch error detection on missing executables, process creation, state polling, and clean termination.
-5. **Hardware Inspection:** OS version detection, CPU model string, RAM capacity, and GPU identification.
-6. **Integration Interface:** Adapter registration, name verification, and availability reporting.
-
----
-
-## 5. Persistent Data Locations
-
-- **Configuration File:** `%APPDATA%\ProjectMiami\miami_config.ini`
-- **Application Logs:** `%APPDATA%\ProjectMiami\miami_launcher.log`
+Project Miami is an independent launcher project and does not distribute copyrighted game assets, executables, or encryption keys. Users provide their own legally obtained game installation.
