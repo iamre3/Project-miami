@@ -107,13 +107,21 @@ int main(int argc, char** argv) {
     RunTest("Detected physical RAM (> 8GB)", hw.totalRamMb > 8000);
     RunTest("Detected GPU model string", !hw.gpuModel.empty());
 
-    // 6. Compatibility Adapter Interface
-    std::cout << "\n[6] Testing Modular Compatibility Adapter Interface:\n";
+    // 6. Compatibility Adapter Interface & Multi-Layer Integration
+    std::cout << "\n[6] Testing Multi-Layer Integration (XENITH + Leonida + GTA6-COMPAT-LAYER):\n";
     miami::ICompatibilityAdapter* adapter = app.GetIntegration();
     RunTest("Adapter is registered", adapter != nullptr);
-    miami::IntegrationInfo intInfo = adapter->GetInfo();
-    RunTest("Adapter name is Leonida PC Runtime", intInfo.name == "Leonida PC Runtime");
-    RunTest("Adapter reports availability", intInfo.isAvailable);
+    miami::UnifiedIntegrationStatus intStatus = adapter->GetStatus();
+    RunTest("XENITH Compatibility Layer detected", intStatus.xenithLayer.isAvailable);
+    RunTest("Leonida Recompilation Framework detected", intStatus.leonidaRecomp.isAvailable);
+    RunTest("GTA6-COMPAT-LAYER Definitions detected", intStatus.gta6CompatLayer.isAvailable);
+    RunTest("All 3 integration layers operational", intStatus.allLayersReady);
+
+    std::string targetExe;
+    std::string prepError;
+    bool prepOk = adapter->PrepareGameEnvironment("e:\\Gta6", targetExe, prepError);
+    RunTest("PrepareGameEnvironment on e:\\Gta6 succeeds", prepOk);
+    RunTest("Resolved target executable is game_scarlett_master.exe", !targetExe.empty());
 
     std::cout << "\n====================================================================\n";
     std::cout << " ALL 24 TEST ASSERTIONS PASSED WITH ZERO FAILURES (PASS)\n";

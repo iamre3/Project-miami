@@ -13,26 +13,40 @@ enum class IntegrationStatus {
     Unavailable
 };
 
-struct IntegrationInfo {
-    std::string name = "Leonida PC Runtime";
-    std::string version = "0.2.0-preview";
-    IntegrationStatus status = IntegrationStatus::NotConfigured;
-    std::string statusMessage = "Runtime integration ready for executable execution.";
-    bool isAvailable = true;
+struct LayerDiagnostic {
+    std::string name;
+    std::string role;
+    std::string version;
+    std::string path;
+    bool isAvailable = false;
+    std::string statusDetail;
+};
+
+struct UnifiedIntegrationStatus {
+    bool allLayersReady = false;
+    LayerDiagnostic xenithLayer;
+    LayerDiagnostic leonidaRecomp;
+    LayerDiagnostic gta6CompatLayer;
+    std::string summary;
 };
 
 class ICompatibilityAdapter {
 public:
     virtual ~ICompatibilityAdapter() = default;
-    virtual IntegrationInfo GetInfo() const = 0;
-    virtual bool ValidateTarget(const std::string& path, std::string& outError) = 0;
+    virtual UnifiedIntegrationStatus GetStatus() = 0;
+    virtual bool PrepareGameEnvironment(const std::string& gameDir, std::string& outExecutable, std::string& outError) = 0;
 };
 
-class LeonidaRuntimeAdapter : public ICompatibilityAdapter {
+class UnifiedRuntimeAdapter : public ICompatibilityAdapter {
 public:
-    LeonidaRuntimeAdapter();
-    IntegrationInfo GetInfo() const override;
-    bool ValidateTarget(const std::string& path, std::string& outError) override;
+    UnifiedRuntimeAdapter();
+    UnifiedIntegrationStatus GetStatus() override;
+    bool PrepareGameEnvironment(const std::string& gameDir, std::string& outExecutable, std::string& outError) override;
+
+private:
+    std::string m_xenithRoot = "e:\\XENITH";
+    std::string m_leonidaRoot = "e:\\XENITH\\references\\Leonida";
+    std::string m_compatLayerRoot = "e:\\XENITH\\references\\GTA6-COMPAT-LAYER";
 };
 
 } // namespace miami

@@ -13,7 +13,7 @@ MiamiApp* GetAppInstance() {
 
 MiamiApp::MiamiApp() {
     g_app = this;
-    m_integration = new LeonidaRuntimeAdapter();
+    m_integration = new UnifiedRuntimeAdapter();
 }
 
 MiamiApp::~MiamiApp() {

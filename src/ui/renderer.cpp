@@ -434,7 +434,8 @@ void MiamiRenderer::RenderMainHome(MiamiApp* app, D2D1_RECT_F bounds) {
         L"Version: 1.0.2.1 PC\n"
         L"Executable: " + std::wstring(info.executableName.begin(), info.executableName.end()) + L"\n"
         L"Install Folder: " + std::wstring(info.directoryPath.begin(), info.directoryPath.end()) + L"\n"
-        L"Runtime Adapter: " + std::wstring(app->GetIntegration()->GetInfo().name.begin(), app->GetIntegration()->GetInfo().name.end()) + L"\n"
+        L"Compatibility: XENITH GDK + Scarlett Layer\n"
+        L"Recompilation: Leonida RDNA2 Translation\n"
         L"Display Mode: 1920x1080 (Borderless)";
 
     D2D1_RECT_F metaText = D2D1::RectF(metaCard.left + 20.0f, metaCard.top + 55.0f, metaCard.right - 20.0f, metaCard.bottom - 20.0f);

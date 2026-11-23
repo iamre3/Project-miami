@@ -10,8 +10,11 @@
 
 **Project Miami** is an independent, production-quality Windows PC game launcher designed from scratch. It delivers a modern, cinematic interface that prioritizes the game itself, free from console dashboard layouts, emulator menus, fake statistics, or developer clutter.
 
-### Core Architecture
-- **Modern Desktop UI & Custom Title Bar:** Features integrated window controls (Minimize, Maximize/Restore, Close), smooth window resizing, and crisp typography.
+### Core Architecture & Multi-Layer System
+Project Miami coordinates three specialized compatibility and recompilation layers:
+1. **XENITH Core Subsystems (`e:\XENITH`):** PE32+ loader, GDK Game Core runtime shims (`xgameruntime.dll`, `xmem.dll`), memory pool management (`MEM_GRAPHICS`), and Direct3D 12 device creation.
+2. **Leonida Recompilation Framework (`e:\XENITH\references\Leonida`):** RDNA2-to-SPIR-V shader translation toolchain, AWC audio extractors, BCPack texture decompression, and static recompilation engine.
+3. **GTA6-COMPAT-LAYER (`e:\XENITH\references\GTA6-COMPAT-LAYER`):** Xbox Series Scarlett architecture headers (`scarlett.h`), module DEF ordinal exports (`d3d12_xs.def`, `gameinput.def`, etc.), and HLE registry bindings.
 - **Cinematic Home Screen:** High-impact background, game title, installation status badge, metadata panel, and a primary **"Play Now"** action.
 - **Streamlined Setup Wizard (5 Steps):**
   1. *Welcome:* Clean brand introduction.
