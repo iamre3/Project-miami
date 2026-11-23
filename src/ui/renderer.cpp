@@ -392,8 +392,8 @@ void MiamiRenderer::RenderMainHome(MiamiApp* app, D2D1_RECT_F bounds) {
         std::wstring runningText = L"■ RUNNING (PID " + std::to_wstring(proc.GetStatus().processId) + L")";
         DrawButton(runningText.c_str(), playBtn, false, playHover);
     } else if (!isInstalled) {
-        if (DrawButton(L"CONFIGURE GAME", playBtn, true, playHover)) {
-            app->NavigateTo(AppView::SetupWelcome);
+        if (DrawButton(L"LOCATE GTA 6 FILES", playBtn, false, playHover)) {
+            app->NavigateTo(AppView::SetupDirectory);
         }
     } else {
         if (DrawButton(L"▶  PLAY NOW", playBtn, true, playHover)) {
@@ -801,8 +801,13 @@ void MiamiRenderer::RenderSetupDirectory(MiamiApp* app, D2D1_RECT_F bounds) {
     }
 
     D2D1_RECT_F nextBtn = D2D1::RectF(card.right - 200.0f, card.bottom - 70.0f, card.right - 40.0f, card.bottom - 26.0f);
-    if (DrawButton(L"CONTINUE  →", nextBtn, true, IsPointInRect(m_mouseX, m_mouseY, nextBtn))) {
-        app->NavigateTo(AppView::SetupComplete);
+    bool canProceed = (info.status == ValidationStatus::Valid);
+    if (canProceed) {
+        if (DrawButton(L"CONTINUE  →", nextBtn, true, IsPointInRect(m_mouseX, m_mouseY, nextBtn))) {
+            app->NavigateTo(AppView::SetupComplete);
+        }
+    } else {
+        DrawButton(L"FILES REQUIRED", nextBtn, false, false, false);
     }
 }
 

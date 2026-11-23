@@ -11,6 +11,8 @@ enum class ValidationStatus {
     Valid,
     InvalidDirectory,
     MissingExecutable,
+    CorruptedExecutable,
+    MissingGameData,
     Error
 };
 
@@ -19,11 +21,17 @@ struct InstallationInfo {
     ValidationStatus status = ValidationStatus::NotValidated;
     std::string statusMessage;
     
+    // Strict Executable validation
     bool executableFound = false;
     std::string executableName;
     uint64_t executableSizeBytes = 0;
+    bool isPE64 = false;
+    bool hasXbldSection = false;
+    std::string xbldEdition;
     
+    // Strict Game Data validation
     bool hasGameData = false;
+    int packageCount = 0;
     uint64_t totalDataBytes = 0;
     
     void Clear() {
@@ -33,7 +41,11 @@ struct InstallationInfo {
         executableFound = false;
         executableName.clear();
         executableSizeBytes = 0;
+        isPE64 = false;
+        hasXbldSection = false;
+        xbldEdition.clear();
         hasGameData = false;
+        packageCount = 0;
         totalDataBytes = 0;
     }
 };
@@ -50,6 +62,7 @@ public:
 
 private:
     InstallationInfo m_currentInfo;
+    bool ProbeExecutableHeaders(const std::string& exePath, InstallationInfo& outInfo);
 };
 
 } // namespace miami

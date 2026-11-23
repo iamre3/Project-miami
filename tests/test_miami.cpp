@@ -53,21 +53,26 @@ int main(int argc, char** argv) {
     bool corruptHandled = cfgRecover.Load(corruptPath);
     RunTest("Graceful recovery from corrupted config file", cfgRecover.display.resolutionWidth == 1920);
 
-    // 2. Installation Validation & Honest Detection
-    std::cout << "\n[2] Testing Directory Validation & Honest Inspection:\n";
+    // 2. Strict GTA 6 Installation Validation
+    std::cout << "\n[2] Testing Strict GTA 6 Directory & File Validation:\n";
     miami::InstallationManager installer;
     
     // Invalid directory
     miami::InstallationInfo invalidInfo = installer.ValidateDirectory("e:\\NonExistent_Fake_Dir_12345");
     RunTest("Reject non-existent directory", invalidInfo.status == miami::ValidationStatus::InvalidDirectory);
 
+    // Empty/dummy directory without GTA 6 files
+    std::string emptyDir = "e:\\ProjectMiami\\out";
+    miami::InstallationInfo emptyInfo = installer.ValidateDirectory(emptyDir);
+    RunTest("Reject folder without game_scarlett_master.exe", emptyInfo.status == miami::ValidationStatus::MissingExecutable);
+
     // Real directory validation on e:\Gta6
     miami::InstallationInfo realInfo = installer.ValidateDirectory("e:\\Gta6");
-    RunTest("Directory e:\\Gta6 detected", realInfo.status == miami::ValidationStatus::Valid || realInfo.status == miami::ValidationStatus::MissingExecutable);
-    if (realInfo.executableFound) {
-        RunTest("Probed game executable", !realInfo.executableName.empty());
-        RunTest("Executable size > 0", realInfo.executableSizeBytes > 0);
-    }
+    RunTest("Detect e:\\Gta6 directory", realInfo.status == miami::ValidationStatus::Valid);
+    RunTest("Verified game_scarlett_master.exe", realInfo.executableFound && realInfo.executableName == "game_scarlett_master.exe");
+    RunTest("Verified PE64 machine architecture", realInfo.isPE64);
+    RunTest("Verified .xbld Xbox build section", realInfo.hasXbldSection);
+    RunTest("Verified GTA 6 game package archives", realInfo.hasGameData && realInfo.totalDataBytes > 0);
 
     // 3. Game Library Management
     std::cout << "\n[3] Testing Game Library Management:\n";
