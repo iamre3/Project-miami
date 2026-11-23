@@ -110,8 +110,15 @@ void MiamiApp::NavigateTo(AppView view) {
 }
 
 bool MiamiApp::StartGameLaunch() {
-    std::string exePath = m_config.installationPath + "\\" + m_config.activeExecutable;
-    return m_process.LaunchGame(exePath, m_config.installationPath);
+    std::string preparedExe;
+    std::string prepError;
+    if (m_integration && !m_integration->PrepareGameEnvironment(m_config.installationPath, preparedExe, prepError)) {
+        LogError("Launch preparation failed: " + prepError);
+        return false;
+    }
+    
+    std::string exeToRun = preparedExe.empty() ? (m_config.installationPath + "\\" + m_config.activeExecutable) : preparedExe;
+    return m_process.LaunchGame(exeToRun, m_config.installationPath);
 }
 
 void MiamiApp::Shutdown() {
