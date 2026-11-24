@@ -35,7 +35,7 @@ echo [OK] GTA6-COMPAT-LAYER ScarlettCompat.dll and 6 shim .lib files built in %O
 
 set XENITH_SRCS="%XENITH_ROOT%\src\core\core.cpp" "%XENITH_ROOT%\src\core\backend_api.cpp" "%XENITH_ROOT%\src\cpu\cpu.cpp" "%XENITH_ROOT%\src\memory\memory.cpp" "%XENITH_ROOT%\src\gpu\gpu.cpp" "%XENITH_ROOT%\src\system\system.cpp" "%XENITH_ROOT%\src\input\input.cpp" "%XENITH_ROOT%\src\audio\audio.cpp" "%XENITH_ROOT%\src\storage\storage.cpp" "%XENITH_ROOT%\src\compat\compat.cpp" "%XENITH_ROOT%\src\loader\loader.cpp" "%XENITH_ROOT%\src\debugger\debugger.cpp"
 set LEONIDA_SRCS="%LEONIDA_ROOT%\runtime\src\root_signature.cpp" "%LEONIDA_ROOT%\runtime\shims\d3d12_xs_rootsig.cpp"
-set MIAMI_INCLUDES=/I"%MIAMI_ROOT%\include" /I"%XENITH_ROOT%\include" /I"%COMPAT_ROOT%\include" /I"%COMPAT_ROOT%\src" /I"%LEONIDA_ROOT%\runtime\src" /I"%LEONIDA_ROOT%\runtime\shims"
+set MIAMI_INCLUDES=/I"%MIAMI_ROOT%\include" /I"%MIAMI_ROOT%\src" /I"%XENITH_ROOT%\include" /I"%COMPAT_ROOT%\include" /I"%COMPAT_ROOT%\src" /I"%LEONIDA_ROOT%\runtime\src" /I"%LEONIDA_ROOT%\runtime\shims"
 
 echo.
 echo [2/5] Compiling ProjectMiami.exe (Linked with XENITH + Leonida + GTA6-COMPAT-LAYER)...
@@ -85,7 +85,26 @@ if errorlevel 1 (
 echo [OK] test_miami.exe generated at %OUT%\test_miami.exe
 
 echo.
-echo [4/5] Executing Automated Verification Suite...
+echo [4/6] Compiling test_graphics.exe (Native Direct3D 12 Hardware Graphics Test)...
+cl /nologo /O2 /W3 /std:c++20 /EHa /MD /utf-8 /DNOMINMAX ^
+   %MIAMI_INCLUDES% ^
+   "%MIAMI_ROOT%\tests\test_graphics.cpp" ^
+   "%MIAMI_ROOT%\src\graphics\shader_compiler.cpp" ^
+   "%MIAMI_ROOT%\src\graphics\diagnostics.cpp" ^
+   "%MIAMI_ROOT%\src\graphics\runtime_bridge.cpp" ^
+   "%MIAMI_ROOT%\src\graphics\d3d12\d3d12_backend.cpp" ^
+   /Fe:"%OUT%\test_graphics.exe" /Fo"%OUT%\obj\\" ^
+   /link /SUBSYSTEM:CONSOLE ^
+   user32.lib gdi32.lib shell32.lib ole32.lib dxgi.lib d3d12.lib d3dcompiler.lib dxguid.lib
+
+if errorlevel 1 (
+    echo [ERROR] Failed to compile test_graphics.exe
+    exit /b 1
+)
+echo [OK] test_graphics.exe generated at %OUT%\test_graphics.exe
+
+echo.
+echo [5/6] Executing Automated Compatibility Verification Suite...
 "%OUT%\test_miami.exe"
 if errorlevel 1 (
     echo [ERROR] Verification suite failed!
@@ -93,7 +112,15 @@ if errorlevel 1 (
 )
 
 echo.
+echo [6/6] Executing Native Direct3D 12 Graphics Subsystem Test Suite...
+"%OUT%\test_graphics.exe"
+if errorlevel 1 (
+    echo [ERROR] Native graphics verification test failed!
+    exit /b 1
+)
+
+echo.
 echo ====================================================================
-echo  PROJECT MIAMI + XENITH + LEONIDA + GTA6-COMPAT-LAYER VERIFIED!
+echo  PROJECT MIAMI + NATIVE GRAPHICS (D3D12) + XENITH + LEONIDA VERIFIED!
 echo ====================================================================
 exit /b 0

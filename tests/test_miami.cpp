@@ -98,8 +98,11 @@ int main(int argc, char** argv) {
     std::string cmdPath = std::string(sysDir) + "\\cmd.exe";
     bool realLaunch = proc.LaunchGame(cmdPath, "e:\\ProjectMiami", "/c exit 0");
     RunTest("Launch authorized process", realLaunch);
-    Sleep(100);
-    proc.PollState();
+    for (int retry = 0; retry < 10; ++retry) {
+        Sleep(50);
+        proc.PollState();
+        if (proc.GetStatus().state == miami::ProcessState::Terminated) break;
+    }
     RunTest("Process tracked and terminated with exit code 0", proc.GetStatus().state == miami::ProcessState::Terminated && proc.GetStatus().exitCode == 0);
 
     // 5. Hardware Diagnostics & Telemetry

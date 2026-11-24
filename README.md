@@ -43,18 +43,26 @@ Project Miami acts as the central bridge between the game installation, underlyi
 
 ## Instructions
 
-### Building the Launcher
+### Building the Launcher & Graphics Subsystem
 1. Open a Command Prompt or PowerShell terminal.
-2. Run the build script:
+2. Run the unified build script:
    ```cmd
    build.bat
    ```
-3. The build script automatically locates the MSVC compiler, compiles the launcher executable, and runs the automated test suite.
+3. The build script automatically locates the MSVC compiler, compiles the launcher executable, compiles the standalone Direct3D 12 graphics subsystem, and executes both validation suites:
+   - `out/test_miami.exe`: 31 compatibility, recompilation, and platform tests.
+   - `out/test_graphics.exe`: 26 native Direct3D 12 GPU hardware tests (geometry, textures, depth, off-screen rendering, presentation, and GPU readback verification).
+
+### Running the Standalone Native Graphics Test Suite
+To independently validate native GPU hardware rendering, run:
+```cmd
+out\test_graphics.exe
+```
 
 ### Running the Launcher
 After building, run:
 ```cmd
-ProjectMiami.exe
+out\ProjectMiami.exe
 ```
 
 ### First-Time Configuration
