@@ -1,0 +1,11 @@
+; xgameruntime_ord.def — ordinal import lib (TEST ONLY).
+;
+; Imports XGameRuntimeInitialize BY ORDINAL so the loader's ordinal table
+; can be exercised by the ordinal test guest. The ordinal here is
+; SYNTHETIC, assigned by the layer (XGameRuntimeInitialize=1), matching
+; kOrdinalExports in src/hle_registry.cpp. The real Xbox xgameruntime.dll
+; ordinal is GDKX/NDA-gated and must be confirmed from the exe's import
+; table once it lands. Never link this into a real guest build.
+LIBRARY xgameruntime.dll
+EXPORTS
+    XGameRuntimeInitialize @1

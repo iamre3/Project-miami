@@ -1,0 +1,21 @@
+; vccorlib110.def — import library for the REAL vccorlib110.dll
+; (Visual C++ 2012 C++/CX runtime, installed by the VS2012 redist).
+; Used ONLY by the WinRT proof guest (tests/guest_winrt.cpp), so it can
+; call GetActivationFactoryByPCWSTR the way an Xbox One title guest does.
+; The layer itself never links this: it gets the real address from the
+; guest's IAT at hook time (pe_loader.cpp HookWinRtActivation).
+;
+; The real vccorlib110.dll exports GetActivationFactoryByPCWSTR ONLY
+; under its C++ mangled name (dumpbin /EXPORTS on System32\vccorlib110.dll,
+; undname: long __cdecl GetActivationFactoryByPCWSTR(void*,
+; Platform::Guid&, void**)). There is NO plain-name export — an earlier
+; version of this def listed the plain name, and the loader's import
+; resolution failed on it (IMPORT FAILED: vccorlib110.dll!
+; GetActivationFactoryByPCWSTR), which the first WinRT build caught.
+; The guest declares the C++ signature exactly so (see
+; tests/guest_winrt.cpp), so the linker emits the mangled reference and
+; the import resolves against the real DLL exactly like an Xbox One
+; title's.
+LIBRARY vccorlib110
+EXPORTS
+    ?GetActivationFactoryByPCWSTR@@YAJPEAXAEAVGuid@Platform@@PEAPEAX@Z

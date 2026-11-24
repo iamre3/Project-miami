@@ -1,0 +1,16 @@
+; xg_x.def — ERA (Xbox One) texture-tiling import lib (phase 5).
+; Xbox textures are tiled/swizzled for the console GPU; desktop D3D11
+; has no equivalent layout computation, so the layer answers these
+; with explicit E_NOTIMPL stubs (logged) — see docs/ERA-GDK-MAPPING.md.
+; Ordinals are the Xbox One shim-DLL xg_x.dll ordinals:
+; 2, 3, 5, 6, 8, 9, 10. Signatures are XDK-gated; the stubs log their
+; first four raw args.
+LIBRARY xg_x
+EXPORTS
+    XGComputeOptimalDepthStencilTileModes @2
+    XGComputeOptimalTileMode @3
+    XGComputeTexture2DLayout @5
+    XGComputeTexture3DLayout @6
+    XGCreateTexture1DComputer @8
+    XGCreateTexture2DComputer @9
+    XGCreateTexture3DComputer @10

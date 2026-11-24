@@ -1,0 +1,12 @@
+; xmem_ord.def — ordinal import lib (TEST ONLY).
+;
+; Imports XMemAlloc/XMemFree BY ORDINAL so the loader's ordinal table can
+; be exercised by the ordinal test guest. The ordinals here are SYNTHETIC,
+; assigned by the layer in .def order (XMemAlloc=1, XMemFree=2), matching
+; kOrdinalExports in src/hle_registry.cpp. The real Xbox xmem.dll
+; ordinals are GDKX/NDA-gated and must be confirmed from the exe's import
+; table once it lands. Never link this into a real guest build.
+LIBRARY xmem.dll
+EXPORTS
+    XMemAlloc @1
+    XMemFree  @2

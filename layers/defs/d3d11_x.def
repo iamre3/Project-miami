@@ -1,0 +1,26 @@
+; d3d11_x.def — ERA (Xbox One) D3D11.x import lib (phase 5).
+; The layer translates these to a real desktop D3D11 device; see
+; docs/ERA-GDK-MAPPING.md. D3D11XCreateDeviceX's 3-arg form
+; (params struct, device, context) follows the public Xbox One
+; shim-DLL d3d11.x.cpp (XDK-derived). D3DMapEsramMemory and
+; DXGIXPresentArray signatures follow the same source.
+; Ordinals are the Xbox One shim-DLL d3d11_x.dll ordinals:
+; D3D11XCreateDeviceX @4, D3DMapEsramMemory @9, DXGIXPresentArray @11.
+; ERA titles import by NAME, so the ordinal rows never affect them —
+; they only matter for a title that imports by ordinal. The real
+; console ordinals are unknown; the shim-DLL layout is the only
+; available one.
+; D3D11XCreateDevice / D3D11XCreateDeviceAndSwapChain have no known
+; real ordinal (no ERA title in the layer's surface imports them) and
+; export by name only. D3DAllocateGraphicsMemory / D3DFreeGraphicsMemory
+; are supporting infrastructure (Xbox One shim-DLL ordinals 6 / 8) and
+; also export by name only.
+LIBRARY d3d11_x
+EXPORTS
+    D3D11XCreateDevice
+    D3D11XCreateDeviceAndSwapChain
+    D3D11XCreateDeviceX @4
+    D3DMapEsramMemory @9
+    DXGIXPresentArray @11
+    D3DAllocateGraphicsMemory
+    D3DFreeGraphicsMemory

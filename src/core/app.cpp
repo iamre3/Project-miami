@@ -118,6 +118,16 @@ bool MiamiApp::StartGameLaunch() {
     }
     
     std::string exeToRun = preparedExe.empty() ? (m_config.installationPath + "\\" + m_config.activeExecutable) : preparedExe;
+
+    // Upstream SSTGxf/ScarlettCompat contract: scarlett_verify.exe "<full path to game exe>" [timeout_ms]
+    // The harness maps the Xbox PE, resolves all imports, patches TLS /GA, and executes with crash protection.
+    std::string verifyHarness = "e:\\ProjectMiami\\out\\scarlett_verify.exe";
+    DWORD dwHarness = GetFileAttributesA(verifyHarness.c_str());
+    if (dwHarness != INVALID_FILE_ATTRIBUTES && exeToRun.find("game_scarlett_master.exe") != std::string::npos) {
+        LogInfo("Launching through SSTGxf/ScarlettCompat verified loader: " + verifyHarness + " " + exeToRun);
+        return m_process.LaunchGame(verifyHarness, m_config.installationPath, "\"" + exeToRun + "\" 300000");
+    }
+
     return m_process.LaunchGame(exeToRun, m_config.installationPath);
 }
 

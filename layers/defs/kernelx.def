@@ -1,0 +1,30 @@
+; kernelx.def — ERA (Xbox One) kernel import lib (phase 5).
+; XMemAlloc/XMemFree are a 1:1 map to the GDK xmem.dll functions (same
+; API, different module); see docs/ERA-GDK-MAPPING.md.
+; Ordinals are the Xbox One shim-DLL kernelx.dll ordinals — the only
+; real ordinal layout available. ERA titles import kernelx BY NAME, so
+; the ordinal rows never affect a name import; they only matter for a
+; title that imports by ordinal. kernelx's other imports in a real ERA
+; title are Win32 API names (~106) that the layer forwards to
+; kernel32.dll at load time — they are not in this .def because they
+; are not layer exports (see src/pe_loader.cpp). VirtualAlloc is the
+; one exception to the forward: the layer translates it
+; (HleVirtualAlloc, VirtualAlloc flag-translation fix 2026-11-23) via
+; the HLE table, NOT via this .def — putting the NAME "VirtualAlloc"
+; here would make the era guest link it from kernelx.lib and reroute
+; the CRT's own VirtualAlloc calls through the wrapper (kernelx.lib is
+; searched before kernel32.lib). Instead the test hook is exported
+; under its own name, HleVirtualAlloc, so the era guest can call the
+; wrapper directly and unit-test the flag translation while the guest's
+; (and the CRT's) plain VirtualAlloc still goes to kernel32. An Xbox
+; One title boot is the end-to-end proof that the real
+; kernelx!VirtualAlloc import routes to HleVirtualAlloc.
+LIBRARY kernelx
+EXPORTS
+    XMemAlloc @514
+    XMemFree @517
+    XMemAllocDefault @515
+    XMemFreeDefault @518
+    XMemSetAllocationHooks @524
+    TitleMemoryStatus @463
+    HleVirtualAlloc

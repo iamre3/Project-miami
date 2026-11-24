@@ -1,0 +1,18 @@
+# Build outputs (never committed)
+out/
+*.obj
+*.exe
+*.dll
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.log
+*.tlog
+*.lastbuildstate
+.vs/
+# OS / editor
+Thumbs.db
+Desktop.ini
+*.user
+*.suo

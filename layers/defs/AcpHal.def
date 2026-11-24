@@ -1,0 +1,20 @@
+; AcpHal.def — ERA (Xbox One) audio-DSP-heap import lib (phase 5).
+; The ACP is the console's audio DSP; desktop has no equivalent heap,
+; so the layer answers these with explicit E_NOTIMPL stubs (logged) —
+; see docs/ERA-GDK-MAPPING.md. Ordinals are the Xbox One shim-DLL
+; AcpHal.dll ordinals: 1, 2, 3, 4, 5, 6, 8, 9, 10. (An earlier phase 5
+; note claimed AcpHalAllocateShapeContexts was ordinal 0 and could not
+; be expressed in a .def — that was wrong; its Xbox One shim-DLL
+; ordinal is 1.) Signatures are XDK-gated; the stubs log their first
+; four raw args.
+LIBRARY AcpHal
+EXPORTS
+    AcpHalAllocateShapeContexts @1
+    AcpHalCreate @2
+    AcpHalReleaseShapeContexts @3
+    ApuAlloc @4
+    ApuCreateHeap @5
+    ApuFree @6
+    ApuIsVirtualAddressValid @8
+    ApuMapApuAddress @9
+    ApuMapVirtualAddress @10

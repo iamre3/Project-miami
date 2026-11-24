@@ -1,0 +1,11 @@
+; d3d12_x.def — ERA (Xbox One) D3D12 import lib (phase 5).
+; The layer translates this through HleEraD3D12XCreateDevice, a
+; D3D12CreateDevice-shaped passthrough (adapter, minFL, riid, ppDevice).
+; It is a SEPARATE function from d3d12_xs!D3D12XboxCreateDevice, which
+; takes a D3D12XBOX_CREATE_DEVICE_PARAMETERS struct — sharing one
+; implementation crashed era_gfx12 (0xC0000005). See
+; docs/ERA-GDK-MAPPING.md. Signature is ASSUMED
+; (D3D12CreateDevice-shaped) — confirm vs a real ERA exe.
+LIBRARY d3d12_x
+EXPORTS
+    D3D12XCreateDevice
