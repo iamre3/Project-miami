@@ -104,23 +104,40 @@ if errorlevel 1 (
 echo [OK] test_graphics.exe generated at %OUT%\test_graphics.exe
 
 echo.
-echo [5/6] Executing Automated Compatibility Verification Suite...
-"%OUT%\test_miami.exe"
-if errorlevel 1 (
-    echo [ERROR] Verification suite failed!
-    exit /b 1
-)
+echo [5/8] Compiling Progressive Guest Test Applications...
+cl /nologo /O2 /W3 /std:c++20 /EHsc /MD /utf-8 /Fe:"%OUT%\app_minimal.exe" /Fo"%OUT%\obj\\" "%MIAMI_ROOT%\tests\apps\app_minimal.cpp"
+cl /nologo /O2 /W3 /std:c++20 /EHsc /MD /utf-8 /Fe:"%OUT%\app_services.exe" /Fo"%OUT%\obj\\" "%MIAMI_ROOT%\tests\apps\app_services.cpp"
+cl /nologo /O2 /W3 /std:c++20 /EHsc /MD /utf-8 /Fe:"%OUT%\app_graphics.exe" /Fo"%OUT%\obj\\" "%MIAMI_ROOT%\tests\apps\app_graphics.cpp" /link dxgi.lib d3d12.lib
+echo [OK] Guest test executables generated
 
 echo.
-echo [6/6] Executing Native Direct3D 12 Graphics Subsystem Test Suite...
-"%OUT%\test_graphics.exe"
+echo [6/8] Compiling test_runtime.exe (Modular Runtime and System Services Test)...
+set RUNTIME_SRCS="%MIAMI_ROOT%\src\runtime\runtime.cpp" "%MIAMI_ROOT%\src\runtime\memory_service.cpp" "%MIAMI_ROOT%\src\runtime\storage_service.cpp" "%MIAMI_ROOT%\src\runtime\input_service.cpp" "%MIAMI_ROOT%\src\runtime\audio_service.cpp" "%MIAMI_ROOT%\src\runtime\network_service.cpp" "%MIAMI_ROOT%\src\runtime\feature_matrix.cpp" "%MIAMI_ROOT%\src\graphics\shader_compiler.cpp" "%MIAMI_ROOT%\src\graphics\diagnostics.cpp" "%MIAMI_ROOT%\src\graphics\runtime_bridge.cpp" "%MIAMI_ROOT%\src\graphics\d3d12\d3d12_backend.cpp"
+
+cl /nologo /O2 /W3 /std:c++20 /EHa /MD /utf-8 /DNOMINMAX ^
+   %MIAMI_INCLUDES% ^
+   "%MIAMI_ROOT%\tests\test_runtime.cpp" ^
+   %RUNTIME_SRCS% ^
+   /Fe:"%OUT%\test_runtime.exe" /Fo"%OUT%\obj\\" ^
+   /link /SUBSYSTEM:CONSOLE ^
+   user32.lib gdi32.lib shell32.lib ole32.lib dxgi.lib d3d12.lib d3dcompiler.lib dxguid.lib xinput.lib winmm.lib ws2_32.lib advapi32.lib
 if errorlevel 1 (
-    echo [ERROR] Native graphics verification test failed!
+    echo [ERROR] Failed to compile test_runtime.exe
     exit /b 1
 )
+echo [OK] test_runtime.exe generated at %OUT%\test_runtime.exe
+
+echo.
+echo [7/8] Executing Automated Compatibility Verification Suites...
+"%OUT%\test_miami.exe" || exit /b 1
+"%OUT%\test_graphics.exe" || exit /b 1
+
+echo.
+echo [8/8] Executing Modular Runtime and System Services Verification...
+"%OUT%\test_runtime.exe" || exit /b 1
 
 echo.
 echo ====================================================================
-echo  PROJECT MIAMI + NATIVE GRAPHICS (D3D12) + XENITH + LEONIDA VERIFIED!
+echo  PROJECT MIAMI COMPATIBILITY PLATFORM AND ALL SUBSYSTEMS VERIFIED!
 echo ====================================================================
 exit /b 0
