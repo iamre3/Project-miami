@@ -23,14 +23,22 @@ public:
     GameLibrary();
     
     void LoadDefaults();
+    bool Load(const std::string& iniPath = "");
+    bool Save(const std::string& iniPath = "") const;
+
     const std::vector<GameEntry>& GetGames() const { return m_games; }
     GameEntry* GetActiveGame();
     const GameEntry* GetActiveGame() const;
     
     bool SelectGame(const std::string& id);
+    bool AddGame(const GameEntry& entry);
+    bool RemoveGame(const std::string& id);
     bool UpdateActiveInstallPath(const std::string& path, const std::string& exeName, uint64_t sizeBytes);
+    bool RepairGamePath(const std::string& id, const std::string& newPath);
 
 private:
+    std::string GetDefaultLibraryPath() const;
+
     std::vector<GameEntry> m_games;
     std::string m_activeGameId;
 };

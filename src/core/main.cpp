@@ -126,8 +126,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
         case WM_TIMER: {
+            bool wasRunning = g_app.GetProcess().IsRunning();
             g_app.GetProcess().PollState();
-            InvalidateRect(hwnd, NULL, FALSE);
+            bool isRunning = g_app.GetProcess().IsRunning();
+
+            // When a game process is running or state transitions, keep UI responsive.
+            // When completely idle with no running process or state change, avoid waking the GPU every 16ms.
+            static int idleTick = 0;
+            idleTick++;
+            if (wasRunning != isRunning || isRunning || (idleTick % 30 == 0)) {
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
             return 0;
         }
         case WM_DESTROY: {

@@ -74,13 +74,35 @@ int main(int argc, char** argv) {
     RunTest("Verified .xbld Xbox build section", realInfo.hasXbldSection);
     RunTest("Verified GTA 6 game package archives", realInfo.hasGameData && realInfo.totalDataBytes > 0);
 
-    // 3. Game Library Management
-    std::cout << "\n[3] Testing Game Library Management:\n";
+    // 3. Game Library Management & Persistence
+    std::cout << "\n[3] Testing Game Library Management & Persistence:\n";
     miami::GameLibrary library;
     RunTest("Library contains Grand Theft Auto VI entry", !library.GetGames().empty());
     RunTest("Active game is GTA VI", library.GetActiveGame() != nullptr && library.GetActiveGame()->title == "Grand Theft Auto VI");
     RunTest("Select existing game returns true", library.SelectGame("gta6_main"));
     RunTest("Select non-existent game returns false", !library.SelectGame("non_existent_id"));
+
+    // Test adding and removing custom game / test targets
+    miami::GameEntry testEntry;
+    testEntry.id = "test_custom_target";
+    testEntry.title = "Custom PC Benchmark Target";
+    testEntry.installPath = "e:\\ProjectMiami\\out";
+    testEntry.executableName = "test_miami.exe";
+    testEntry.isInstalled = true;
+    RunTest("Add new game entry to library", library.AddGame(testEntry));
+    RunTest("Library now contains 2 games", library.GetGames().size() == 2);
+    RunTest("Select newly added game", library.SelectGame("test_custom_target") && library.GetActiveGame()->id == "test_custom_target");
+
+    // Persist and reload library
+    std::string testLibIni = "e:\\ProjectMiami\\out\\test_library.ini";
+    RunTest("Save library to INI", library.Save(testLibIni));
+    miami::GameLibrary loadedLib;
+    RunTest("Load library from INI", loadedLib.Load(testLibIni));
+    RunTest("Loaded library contains persisted game entry", loadedLib.GetGames().size() == 2 && loadedLib.SelectGame("test_custom_target"));
+
+    // Clean up entry
+    RunTest("Remove game entry from library", library.RemoveGame("test_custom_target"));
+    RunTest("Library reverted to 1 game", library.GetGames().size() == 1);
 
     // 4. Process Manager Lifecycle
     std::cout << "\n[4] Testing Process Management & Execution Guard:\n";

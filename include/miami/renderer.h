@@ -66,6 +66,20 @@ private:
     ID2D1Bitmap* m_pBmpCharacters = NULL;
     ID2D1Bitmap* m_pBmpSkyline = NULL;
 
+    // Cached Brushes (eliminates millions of allocations per minute)
+    ID2D1SolidColorBrush* m_pBrushBgBase = NULL;
+    ID2D1SolidColorBrush* m_pBrushBgSurface = NULL;
+    ID2D1SolidColorBrush* m_pBrushBgCard = NULL;
+    ID2D1SolidColorBrush* m_pBrushTextPrimary = NULL;
+    ID2D1SolidColorBrush* m_pBrushTextSecondary = NULL;
+    ID2D1SolidColorBrush* m_pBrushTextMuted = NULL;
+    ID2D1SolidColorBrush* m_pBrushBorderLight = NULL;
+    ID2D1SolidColorBrush* m_pBrushBorderAccent = NULL;
+    ID2D1SolidColorBrush* m_pBrushAccentCyan = NULL;
+    ID2D1SolidColorBrush* m_pBrushAccentPink = NULL;
+    ID2D1SolidColorBrush* m_pBrushSuccessGreen = NULL;
+    ID2D1SolidColorBrush* m_pBrushWarningAmber = NULL;
+
     UiTheme m_theme;
     float m_animTime = 0.0f;
     int m_mouseX = 0;
@@ -87,6 +101,7 @@ private:
     void RenderMainHome(MiamiApp* app, D2D1_RECT_F bounds);
     void RenderMainLibrary(MiamiApp* app, D2D1_RECT_F bounds);
     void RenderMainSettings(MiamiApp* app, D2D1_RECT_F bounds);
+    void RenderMainDiagnostics(MiamiApp* app, D2D1_RECT_F bounds);
     void RenderMainAbout(MiamiApp* app, D2D1_RECT_F bounds);
 
     // Setup Wizard Views
