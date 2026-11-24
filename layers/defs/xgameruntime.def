@@ -1,0 +1,5 @@
+LIBRARY xgameruntime
+EXPORTS
+    XGameRuntimeInitialize
+    XUserAddAsync
+    XUserGetId

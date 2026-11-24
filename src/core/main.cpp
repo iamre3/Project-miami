@@ -26,8 +26,8 @@ static void ApplyRoundedWindowRegion(HWND hwnd, UINT width, UINT height) {
     if (wp.showCmd == SW_SHOWMAXIMIZED) {
         SetWindowRgn(hwnd, NULL, TRUE);
     } else {
-        // Explicit 24px (12px radius) rounded region for borderless custom window
-        HRGN hRgn = CreateRoundRectRgn(0, 0, static_cast<int>(width) + 1, static_cast<int>(height) + 1, 24, 24);
+        // Generous 28px rounded window region for borderless glass aesthetic
+        HRGN hRgn = CreateRoundRectRgn(0, 0, static_cast<int>(width) + 1, static_cast<int>(height) + 1, 28, 28);
         SetWindowRgn(hwnd, hRgn, TRUE);
     }
 }

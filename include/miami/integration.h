@@ -22,6 +22,35 @@ struct LayerDiagnostic {
     std::string statusDetail;
 };
 
+struct RecompilationReport {
+    bool completed = false;
+    bool backupCreated = false;
+    std::string backupExePath;
+    uint64_t backupExeSizeBytes = 0;
+
+    std::string recompiledExePath;
+    uint64_t recompiledExeSizeBytes = 0;
+
+    bool peMappedByXenith = false;
+    uint32_t peSectionCount = 0;
+    uint32_t peImportModules = 0;
+    uint32_t peImportsResolved = 0;
+    std::string xbldEdition;
+    std::string xbldBuild;
+
+    uint32_t shadersTranslatedToSpirv = 0;
+    uint64_t totalSpirvBytes = 0;
+    std::string shaderCacheDir;
+
+    bool rootSigCanonicalWritten = false;
+    uint32_t rootSigBytes = 0;
+    bool gfx10SurfaceVerified = false;
+    bool scarlettShimsDeployed = false;
+
+    std::string statusSummary;
+    std::string honestScopeNotice;
+};
+
 struct UnifiedIntegrationStatus {
     bool allLayersReady = false;
     LayerDiagnostic xenithLayer;
@@ -47,6 +76,8 @@ class ICompatibilityAdapter {
 public:
     virtual ~ICompatibilityAdapter() = default;
     virtual UnifiedIntegrationStatus GetStatus() = 0;
+    virtual bool RunSetupRecompilationAndBackup(const std::string& gameDir, RecompilationReport& outReport) = 0;
+    virtual const RecompilationReport& GetLastRecompilationReport() const = 0;
     virtual bool PrepareGameEnvironment(const std::string& gameDir, std::string& outExecutable, std::string& outError) = 0;
 };
 
@@ -56,15 +87,19 @@ public:
     ~UnifiedRuntimeAdapter() override;
 
     UnifiedIntegrationStatus GetStatus() override;
+    bool RunSetupRecompilationAndBackup(const std::string& gameDir, RecompilationReport& outReport) override;
+    const RecompilationReport& GetLastRecompilationReport() const override { return m_lastRecompReport; }
     bool PrepareGameEnvironment(const std::string& gameDir, std::string& outExecutable, std::string& outError) override;
 
 private:
     bool InitializeEngines();
 
     bool m_enginesInitialized = false;
+    std::string m_miamiRoot = "e:\\ProjectMiami";
     std::string m_xenithRoot = "e:\\XENITH";
-    std::string m_leonidaRoot = "e:\\XENITH\\references\\Leonida";
-    std::string m_compatLayerRoot = "e:\\XENITH\\references\\GTA6-COMPAT-LAYER";
+    std::string m_leonidaRoot = "e:\\ProjectMiami\\tools";
+    std::string m_compatLayerRoot = "e:\\ProjectMiami\\layers";
+    RecompilationReport m_lastRecompReport;
 };
 
 } // namespace miami

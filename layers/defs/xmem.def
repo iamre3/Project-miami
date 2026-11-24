@@ -1,0 +1,4 @@
+LIBRARY xmem
+EXPORTS
+    XMemAlloc
+    XMemFree

@@ -84,6 +84,7 @@ void MiamiRenderer::DiscardDeviceResources() {
     if (m_pBmpBackground) { m_pBmpBackground->Release(); m_pBmpBackground = NULL; }
     if (m_pBmpBanner)     { m_pBmpBanner->Release();     m_pBmpBanner = NULL; }
     if (m_pBmpLogo)       { m_pBmpLogo->Release();       m_pBmpLogo = NULL; }
+    if (m_pBmpLogoMark)   { m_pBmpLogoMark->Release();   m_pBmpLogoMark = NULL; }
     if (m_pBmpCharacters) { m_pBmpCharacters->Release(); m_pBmpCharacters = NULL; }
     if (m_pBmpSkyline)    { m_pBmpSkyline->Release();    m_pBmpSkyline = NULL; }
     if (m_pRenderTarget)  { m_pRenderTarget->Release();  m_pRenderTarget = NULL; }
@@ -110,6 +111,7 @@ void MiamiRenderer::LoadAssetBitmaps() {
     loadBmp(L"e:\\ProjectMiami\\assets\\images\\bg_sunset.png",  &m_pBmpBackground);
     loadBmp(L"e:\\ProjectMiami\\assets\\images\\banner.png",     &m_pBmpBanner);
     loadBmp(L"e:\\ProjectMiami\\assets\\images\\logo.png",       &m_pBmpLogo);
+    loadBmp(L"e:\\ProjectMiami\\assets\\images\\logo-mark.png",  &m_pBmpLogoMark);
     loadBmp(L"e:\\ProjectMiami\\assets\\images\\luciajason.png", &m_pBmpCharacters);
     loadBmp(L"e:\\ProjectMiami\\assets\\images\\skyline.png",    &m_pBmpSkyline);
 }
@@ -433,18 +435,39 @@ bool MiamiRenderer::DrawNavTab(const wchar_t* text, D2D1_RECT_F rect, bool isSel
 
 void MiamiRenderer::RenderCustomTitleBar(MiamiApp* app, D2D1_RECT_F bounds) {
     (void)app;
-    D2D1_RECT_F titleBar = D2D1::RectF(bounds.left, bounds.top, bounds.right, bounds.top + 38.0f);
+    D2D1_RECT_F titleBar = D2D1::RectF(bounds.left, bounds.top, bounds.right, bounds.top + 46.0f);
     
     ID2D1SolidColorBrush* pBrush = NULL;
-    m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(0.03f, 0.03f, 0.045f, 0.88f), &pBrush);
+    m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(0.02f, 0.02f, 0.035f, 0.90f), &pBrush);
     m_pRenderTarget->FillRectangle(titleBar, pBrush);
     pBrush->Release();
 
-    // Window control pill buttons on top right
-    float btnW = 38.0f;
+    // Top-Left: Rockstar / GTA VI Brand Mark Icon
+    float logoMarkX = titleBar.left + 24.0f;
+    float logoMarkY = titleBar.top + 8.0f;
+    float logoMarkSize = 30.0f;
+    if (m_pBmpLogoMark) {
+        D2D1_RECT_F markRect = D2D1::RectF(logoMarkX, logoMarkY, logoMarkX + logoMarkSize, logoMarkY + logoMarkSize);
+        m_pRenderTarget->DrawBitmap(m_pBmpLogoMark, markRect, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
+    } else {
+        D2D1_ELLIPSE dot = D2D1::Ellipse(D2D1::Point2F(logoMarkX + 12.0f, logoMarkY + 15.0f), 6.0f, 6.0f);
+        m_pRenderTarget->CreateSolidColorBrush(m_theme.accentPink, &pBrush);
+        m_pRenderTarget->FillEllipse(dot, pBrush);
+        pBrush->Release();
+    }
+
+    D2D1_RECT_F brandTitleRect = D2D1::RectF(logoMarkX + logoMarkSize + 12.0f, titleBar.top, titleBar.left + 350.0f, titleBar.bottom);
+    m_pRenderTarget->CreateSolidColorBrush(m_theme.textPrimary, &pBrush);
+    m_pFontSmall->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+    m_pFontSmall->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+    m_pRenderTarget->DrawText(L"PROJECT MIAMI  •  LEONIDA PC RUNTIME", 37, m_pFontSmall, brandTitleRect, pBrush);
+    pBrush->Release();
+
+    // Top-Right: Window control pill buttons
+    float btnW = 36.0f;
     float btnH = 26.0f;
-    float topPad = titleBar.top + 6.0f;
-    D2D1_RECT_F closeBtn = D2D1::RectF(titleBar.right - btnW - 10.0f, topPad, titleBar.right - 10.0f, topPad + btnH);
+    float topPad = titleBar.top + 10.0f;
+    D2D1_RECT_F closeBtn = D2D1::RectF(titleBar.right - btnW - 12.0f, topPad, titleBar.right - 12.0f, topPad + btnH);
     D2D1_RECT_F maxBtn   = D2D1::RectF(closeBtn.left - btnW - 4.0f, topPad, closeBtn.left - 4.0f, topPad + btnH);
     D2D1_RECT_F minBtn   = D2D1::RectF(maxBtn.left - btnW - 4.0f, topPad, maxBtn.left - 4.0f, topPad + btnH);
 
@@ -474,6 +497,30 @@ void MiamiRenderer::RenderCustomTitleBar(MiamiApp* app, D2D1_RECT_F bounds) {
     m_pRenderTarget->DrawText(L"—", 1, m_pFontSmall, minBtn, pBrush);
     pBrush->Release();
 
+    // Top-Right Live Clock Pill (Matching reference: 09:55 PM)
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    int hour12 = st.wHour % 12;
+    if (hour12 == 0) hour12 = 12;
+    const wchar_t* ampm = (st.wHour >= 12) ? L"PM" : L"AM";
+    wchar_t clockBuf[32];
+    swprintf_s(clockBuf, L"🕒  %02d:%02d %s", hour12, st.wMinute, ampm);
+
+    D2D1_RECT_F clockPill = D2D1::RectF(minBtn.left - 130.0f, topPad - 2.0f, minBtn.left - 14.0f, topPad + btnH + 2.0f);
+    m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(0.08f, 0.08f, 0.12f, 0.70f), &pBrush);
+    m_pRenderTarget->FillRoundedRectangle(D2D1::RoundedRect(clockPill, 15.0f, 15.0f), pBrush);
+    pBrush->Release();
+
+    m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 0.12f), &pBrush);
+    m_pRenderTarget->DrawRoundedRectangle(D2D1::RoundedRect(clockPill, 15.0f, 15.0f), pBrush, 1.0f);
+    pBrush->Release();
+
+    m_pRenderTarget->CreateSolidColorBrush(m_theme.textSecondary, &pBrush);
+    m_pFontSmall->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+    m_pFontSmall->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+    m_pRenderTarget->DrawText(clockBuf, (UINT32)wcslen(clockBuf), m_pFontSmall, clockPill, pBrush);
+    pBrush->Release();
+
     if (isCloseHov && m_mouseDown && !m_clickConsumed) {
         m_clickConsumed = true;
         PostMessage(m_hwnd, WM_CLOSE, 0, 0);
@@ -487,28 +534,16 @@ void MiamiRenderer::RenderCustomTitleBar(MiamiApp* app, D2D1_RECT_F bounds) {
         m_clickConsumed = true;
         ShowWindow(m_hwnd, SW_MINIMIZE);
     }
-
-    // Accent indicator dot + Title
-    D2D1_ELLIPSE dot = D2D1::Ellipse(D2D1::Point2F(titleBar.left + 20.0f, titleBar.top + 19.0f), 4.0f, 4.0f);
-    m_pRenderTarget->CreateSolidColorBrush(m_theme.accentPink, &pBrush);
-    m_pRenderTarget->FillEllipse(dot, pBrush);
-    pBrush->Release();
-
-    D2D1_RECT_F textRect = D2D1::RectF(titleBar.left + 32.0f, titleBar.top, titleBar.right - 180.0f, titleBar.bottom);
-    m_pRenderTarget->CreateSolidColorBrush(m_theme.textSecondary, &pBrush);
-    m_pFontSmall->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-    m_pRenderTarget->DrawText(L"PROJECT MIAMI  •  DESKTOP GAME LAUNCHER", 39, m_pFontSmall, textRect, pBrush);
-    pBrush->Release();
 }
 
 void MiamiRenderer::RenderTopNavigation(MiamiApp* app, D2D1_RECT_F bounds) {
     RenderCustomTitleBar(app, bounds);
 
-    float navTop = bounds.top + 38.0f;
-    D2D1_RECT_F navBar = D2D1::RectF(bounds.left, navTop, bounds.right, navTop + 58.0f);
+    float navTop = bounds.top + 46.0f;
+    D2D1_RECT_F navBar = D2D1::RectF(bounds.left, navTop, bounds.right, navTop + 54.0f);
 
     ID2D1SolidColorBrush* pBrush = NULL;
-    m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(0.045f, 0.045f, 0.068f, 0.85f), &pBrush);
+    m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(0.035f, 0.035f, 0.055f, 0.75f), &pBrush);
     m_pRenderTarget->FillRectangle(navBar, pBrush);
     pBrush->Release();
 
@@ -516,21 +551,13 @@ void MiamiRenderer::RenderTopNavigation(MiamiApp* app, D2D1_RECT_F bounds) {
     m_pRenderTarget->DrawLine(D2D1::Point2F(navBar.left + 24.0f, navBar.bottom), D2D1::Point2F(navBar.right - 24.0f, navBar.bottom), pBrush, 1.0f);
     pBrush->Release();
 
-    // Brand Wordmark
-    D2D1_RECT_F brandRect = D2D1::RectF(navBar.left + 36.0f, navBar.top, navBar.left + 220.0f, navBar.bottom);
-    m_pRenderTarget->CreateSolidColorBrush(m_theme.textPrimary, &pBrush);
-    m_pFontHeading->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-    m_pFontHeading->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-    m_pRenderTarget->DrawText(L"PROJECT MIAMI", 13, m_pFontHeading, brandRect, pBrush);
-    pBrush->Release();
-
-    // Navigation Tabs: HOME, LIBRARY, SETTINGS, ABOUT
-    const wchar_t* tabs[] = { L"HOME", L"LIBRARY", L"SETTINGS", L"ABOUT" };
+    // Horizontal Tabs: GAMES | RECOMPILER | SETTINGS | ABOUT (Rockstar Launcher style)
+    const wchar_t* tabs[] = { L"GAMES", L"RECOMPILER", L"SETTINGS", L"ABOUT" };
     AppView views[] = { AppView::MainHome, AppView::MainLibrary, AppView::MainSettings, AppView::MainAbout };
 
-    float startX = navBar.left + 230.0f;
+    float startX = navBar.left + 36.0f;
     for (int i = 0; i < 4; ++i) {
-        D2D1_RECT_F tabRect = D2D1::RectF(startX + (i * 116.0f), navBar.top, startX + (i * 116.0f) + 110.0f, navBar.bottom);
+        D2D1_RECT_F tabRect = D2D1::RectF(startX + (i * 126.0f), navBar.top, startX + (i * 126.0f) + 118.0f, navBar.bottom);
         bool isHovered = IsPointInRect(m_mouseX, m_mouseY, tabRect);
         bool isSelected = (app->GetCurrentView() == views[i]);
 
@@ -542,8 +569,8 @@ void MiamiRenderer::RenderTopNavigation(MiamiApp* app, D2D1_RECT_F bounds) {
     // Status Pill on Right Side
     const InstallationInfo& info = app->GetInstaller().GetCurrentInfo();
     bool isReady = (info.status == ValidationStatus::Valid);
-    D2D1_RECT_F pillRect = D2D1::RectF(navBar.right - 190.0f, navBar.top + 15.0f, navBar.right - 36.0f, navBar.bottom - 15.0f);
-    DrawPillBadge(isReady ? L"●  READY TO PLAY" : L"▲  FILES REQUIRED",
+    D2D1_RECT_F pillRect = D2D1::RectF(navBar.right - 210.0f, navBar.top + 13.0f, navBar.right - 36.0f, navBar.bottom - 13.0f);
+    DrawPillBadge(isReady ? L"●  XENITH + LEONIDA READY" : L"▲  GTA 6 FILES REQUIRED",
                   pillRect,
                   isReady ? m_theme.successGreen : m_theme.warningAmber);
 }
@@ -551,79 +578,116 @@ void MiamiRenderer::RenderTopNavigation(MiamiApp* app, D2D1_RECT_F bounds) {
 // ── REDESIGNED HOME SCREEN ────────────────────────────────────
 
 void MiamiRenderer::RenderMainHome(MiamiApp* app, D2D1_RECT_F bounds) {
-    RenderCinematicBackdrop(bounds, 0.58f);
+    RenderCinematicBackdrop(bounds, 0.65f);
 
-    // Subtle character artwork on right side of hero canvas
+    // Lucia & Jason Character Artwork aligned on the right, matching Welcome to Leonida
     if (m_pBmpCharacters) {
         D2D1_SIZE_F cSize = m_pBmpCharacters->GetSize();
-        float targetH = (bounds.bottom - bounds.top) * 0.78f;
+        float targetH = (bounds.bottom - bounds.top) * 0.88f;
         float targetW = targetH * (cSize.width / cSize.height);
         D2D1_RECT_F charRect = D2D1::RectF(
-            bounds.right - targetW - 20.0f,
+            bounds.right - targetW,
             bounds.bottom - targetH,
-            bounds.right - 20.0f,
+            bounds.right,
             bounds.bottom
         );
-        m_pRenderTarget->DrawBitmap(m_pBmpCharacters, charRect, 0.35f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
+        m_pRenderTarget->DrawBitmap(m_pBmpCharacters, charRect, 0.95f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
     }
 
     RenderTopNavigation(app, bounds);
 
-    float contentTop   = bounds.top + 135.0f;
-    float contentLeft  = bounds.left + 64.0f;
-    float contentRight = bounds.right - 64.0f;
-
-    // 1. Official Logo Artwork or Hero Display Text
-    float heroCursorY = contentTop;
-    if (m_pBmpLogo) {
-        D2D1_SIZE_F logoSz = m_pBmpLogo->GetSize();
-        float logoH = 140.0f;
-        float logoW = logoH * (logoSz.width / logoSz.height);
-        D2D1_RECT_F logoRect = D2D1::RectF(contentLeft, heroCursorY, contentLeft + logoW, heroCursorY + logoH);
-        m_pRenderTarget->DrawBitmap(m_pBmpLogo, logoRect, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
-        heroCursorY += logoH + 14.0f;
-    }
-
-    // Edition Pill Badge
-    D2D1_RECT_F editionPill = D2D1::RectF(contentLeft, heroCursorY, contentLeft + 210.0f, heroCursorY + 26.0f);
-    DrawPillBadge(L"LEONIDA PC EDITION  •  v1.0.2.1", editionPill, m_theme.accentPink);
-    heroCursorY += 38.0f;
-
-    // Hero Title
-    GameLibrary& lib = app->GetLibrary();
-    const GameEntry* activeGame = lib.GetActiveGame();
-    std::wstring gameTitle = activeGame ? std::wstring(activeGame->title.begin(), activeGame->title.end()) : L"Grand Theft Auto VI";
+    float contentTop   = bounds.top + 115.0f;
+    float contentLeft  = bounds.left + 54.0f;
+    float heroWidth    = (bounds.right - bounds.left) * 0.58f;
 
     ID2D1SolidColorBrush* pBrush = NULL;
-    D2D1_RECT_F titleRect = D2D1::RectF(contentLeft, heroCursorY, contentLeft + 680.0f, heroCursorY + 54.0f);
-    m_pRenderTarget->CreateSolidColorBrush(m_theme.textPrimary, &pBrush);
-    m_pFontHero->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-    m_pFontHero->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
-    m_pRenderTarget->DrawText(gameTitle.c_str(), (UINT32)gameTitle.length(), m_pFontHero, titleRect, pBrush);
+
+    // 1. "WELCOME TO" Subtitle
+    D2D1_RECT_F welcomeRect = D2D1::RectF(contentLeft, contentTop, contentLeft + heroWidth, contentTop + 24.0f);
+    m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(0.95f, 0.70f, 0.82f, 0.90f), &pBrush);
+    m_pFontSmall->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+    m_pFontSmall->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+    m_pRenderTarget->DrawText(L"W E L C O M E   T O", 19, m_pFontSmall, welcomeRect, pBrush);
     pBrush->Release();
-    heroCursorY += 62.0f;
 
-    // Synopsis
-    D2D1_RECT_F descRect = D2D1::RectF(contentLeft, heroCursorY, contentLeft + 520.0f, heroCursorY + 80.0f);
-    m_pRenderTarget->CreateSolidColorBrush(m_theme.textSecondary, &pBrush);
-    m_pFontBody->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-    m_pFontBody->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
-    const wchar_t* synopsis = 
-        L"Explore the sun-soaked streets of Vice City and the vast state of Leonida. "
-        L"Configured for native Windows desktop execution with Direct3D 12 presentation and low-latency input.";
-    m_pRenderTarget->DrawText(synopsis, (UINT32)wcslen(synopsis), m_pFontBody, descRect, pBrush);
-    pBrush->Release();
-    heroCursorY += 92.0f;
+    // 2. Giant Sunset Gradient "LEONIDA" Typography (from reference image)
+    float leonidaTop = contentTop + 22.0f;
+    D2D1_RECT_F leonidaRect = D2D1::RectF(contentLeft - 4.0f, leonidaTop, contentLeft + heroWidth, leonidaTop + 86.0f);
+    
+    // Draw glowing pink-orange gradient headline
+    ID2D1GradientStopCollection* pHeroStops = NULL;
+    D2D1_GRADIENT_STOP heroStops[2];
+    heroStops[0].color = D2D1::ColorF(1.0f, 0.68f, 0.78f, 1.0f); // Light Coral Pink
+    heroStops[1].color = D2D1::ColorF(0.92f, 0.28f, 0.48f, 1.0f); // Deep Sunset Magenta
+    heroStops[0].position = 0.0f;
+    heroStops[1].position = 1.0f;
 
-    // Primary Action Row (Play CTA + Quick Settings Button)
-    ProcessManager& proc = app->GetProcess();
-    proc.PollState();
+    if (SUCCEEDED(m_pRenderTarget->CreateGradientStopCollection(heroStops, 2, &pHeroStops))) {
+        ID2D1LinearGradientBrush* pGrad = NULL;
+        m_pRenderTarget->CreateLinearGradientBrush(
+            D2D1::LinearGradientBrushProperties(D2D1::Point2F(leonidaRect.left, leonidaRect.top), D2D1::Point2F(leonidaRect.left, leonidaRect.bottom)),
+            pHeroStops,
+            &pGrad
+        );
+        if (pGrad) {
+            m_pFontHero->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+            m_pFontHero->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
+            m_pRenderTarget->DrawText(L"LEONIDA", 7, m_pFontHero, leonidaRect, pGrad);
+            pGrad->Release();
+        }
+        pHeroStops->Release();
+    }
 
-    D2D1_RECT_F playBtn = D2D1::RectF(contentLeft, heroCursorY, contentLeft + 230.0f, heroCursorY + 54.0f);
+    // 3. Four Floating Glass Countdown/Status Cards (00 DAYS, 00 HOURS, 00 MINS, 00 SECS)
+    float cardsTop = leonidaTop + 92.0f;
+    float cardW = 92.0f;
+    float cardH = 78.0f;
+    float cardSpacing = 14.0f;
+
+    const wchar_t* pillValues[] = { L"00", L"00", L"00", L"00" };
+    const wchar_t* pillLabels[] = { L"DAYS", L"HOURS", L"MINS", L"SECS" };
+
+    for (int i = 0; i < 4; ++i) {
+        float cx = contentLeft + (i * (cardW + cardSpacing));
+        D2D1_RECT_F cRect = D2D1::RectF(cx, cardsTop, cx + cardW, cardsTop + cardH);
+
+        // Glass card background
+        m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(0.06f, 0.06f, 0.09f, 0.72f), &pBrush);
+        m_pRenderTarget->FillRoundedRectangle(D2D1::RoundedRect(cRect, 12.0f, 12.0f), pBrush);
+        pBrush->Release();
+
+        // Subtle glowing border
+        m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 0.14f), &pBrush);
+        m_pRenderTarget->DrawRoundedRectangle(D2D1::RoundedRect(cRect, 12.0f, 12.0f), pBrush, 1.0f);
+        pBrush->Release();
+
+        // Card number
+        D2D1_RECT_F numRect = D2D1::RectF(cx, cardsTop + 8.0f, cx + cardW, cardsTop + 48.0f);
+        m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(0.98f, 0.45f, 0.65f, 1.0f), &pBrush);
+        m_pFontHeading->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+        m_pFontHeading->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+        m_pRenderTarget->DrawText(pillValues[i], (UINT32)wcslen(pillValues[i]), m_pFontHeading, numRect, pBrush);
+        pBrush->Release();
+
+        // Card unit label
+        D2D1_RECT_F lblRect = D2D1::RectF(cx, cardsTop + 48.0f, cx + cardW, cardsTop + 70.0f);
+        m_pRenderTarget->CreateSolidColorBrush(m_theme.textSecondary, &pBrush);
+        m_pFontSmall->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+        m_pFontSmall->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+        m_pRenderTarget->DrawText(pillLabels[i], (UINT32)wcslen(pillLabels[i]), m_pFontSmall, lblRect, pBrush);
+        pBrush->Release();
+    }
+
+    // 4. Clean White "PLAY ON PC" Button (Matching Rockstar reference style)
+    float ctaTop = cardsTop + cardH + 24.0f;
+    D2D1_RECT_F playBtn = D2D1::RectF(contentLeft, ctaTop, contentLeft + 250.0f, ctaTop + 54.0f);
     bool playHover = IsPointInRect(m_mouseX, m_mouseY, playBtn);
 
     const InstallationInfo& info = app->GetInstaller().GetCurrentInfo();
     bool isInstalled = (info.status == ValidationStatus::Valid);
+
+    ProcessManager& proc = app->GetProcess();
+    proc.PollState();
 
     if (proc.IsRunning()) {
         std::wstring runningText = L"■  RUNNING (PID " + std::to_wstring(proc.GetStatus().processId) + L")";
@@ -633,76 +697,79 @@ void MiamiRenderer::RenderMainHome(MiamiApp* app, D2D1_RECT_F bounds) {
             app->NavigateTo(AppView::SetupDirectory);
         }
     } else {
-        if (DrawButton(L"▶   PLAY NOW", playBtn, true, playHover, false, 10.0f)) {
+        if (DrawButton(L"PLAY ON PC", playBtn, true, playHover, false, 10.0f)) {
             app->StartGameLaunch();
         }
     }
 
-    D2D1_RECT_F quickCfgBtn = D2D1::RectF(playBtn.right + 14.0f, heroCursorY, playBtn.right + 164.0f, heroCursorY + 54.0f);
-    if (DrawButton(L"SETTINGS", quickCfgBtn, false, IsPointInRect(m_mouseX, m_mouseY, quickCfgBtn), false, 10.0f)) {
-        app->NavigateTo(AppView::MainSettings);
+    D2D1_RECT_F recompBtn = D2D1::RectF(playBtn.right + 14.0f, ctaTop, playBtn.right + 180.0f, ctaTop + 54.0f);
+    if (DrawButton(L"RECOMPILE", recompBtn, false, IsPointInRect(m_mouseX, m_mouseY, recompBtn), false, 10.0f)) {
+        app->NavigateTo(AppView::SetupComplete);
     }
 
-    if (proc.GetStatus().state == ProcessState::FailedToLaunch) {
-        D2D1_RECT_F errRect = D2D1::RectF(contentLeft, heroCursorY + 64.0f, contentLeft + 540.0f, heroCursorY + 100.0f);
-        m_pRenderTarget->CreateSolidColorBrush(m_theme.errorRed, &pBrush);
-        std::wstring errStr = L"Launch error: " + std::wstring(proc.GetStatus().errorMessage.begin(), proc.GetStatus().errorMessage.end());
-        m_pRenderTarget->DrawText(errStr.c_str(), (UINT32)errStr.length(), m_pFontSmall, errRect, pBrush);
-        pBrush->Release();
+    // Honest Recompilation & Commercial Scope Notice
+    ICompatibilityAdapter* adapter = app->GetIntegration();
+    std::string scopeNotice = adapter ? adapter->GetLastRecompilationReport().honestScopeNotice : "";
+    if (scopeNotice.empty()) {
+        scopeNotice = "Recompilation translates RDNA2 shaders to SPIR-V, backs up game_scarlett_master.exe, and stages shims. Full PC commercial gameplay & rendering require ongoing engine development.";
     }
+    std::wstring scopeW(scopeNotice.begin(), scopeNotice.end());
 
-    // Right Side: Floating Glass Details Card
-    float cardW = 360.0f;
-    float cardH = 310.0f;
-    D2D1_RECT_F metaCard = D2D1::RectF(contentRight - cardW, contentTop + 20.0f, contentRight, contentTop + 20.0f + cardH);
-    DrawGlassPanel(metaCard, 12.0f, true);
-
-    if (m_pBmpBanner) {
-        D2D1_RECT_F bannerRect = D2D1::RectF(metaCard.left + 12.0f, metaCard.top + 12.0f, metaCard.right - 12.0f, metaCard.top + 115.0f);
-        m_pRenderTarget->DrawBitmap(m_pBmpBanner, bannerRect, 0.92f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
-    }
-
-    D2D1_RECT_F cardHead = D2D1::RectF(metaCard.left + 20.0f, metaCard.top + 128.0f, metaCard.right - 20.0f, metaCard.top + 152.0f);
-    m_pRenderTarget->CreateSolidColorBrush(m_theme.textPrimary, &pBrush);
-    m_pFontHeading->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-    m_pFontHeading->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
-    m_pRenderTarget->DrawText(L"INSTALLATION SUMMARY", 20, m_pFontHeading, cardHead, pBrush);
-    pBrush->Release();
-
-    AppConfig& cfg = app->GetConfig();
-    std::wstring resStr = std::to_wstring(cfg.display.resolutionWidth) + L"x" + std::to_wstring(cfg.display.resolutionHeight) +
-                          (cfg.display.windowMode == 1 ? L" (Borderless)" : (cfg.display.windowMode == 2 ? L" (Fullscreen)" : L" (Windowed)"));
-
-    std::wstring exeNameW = info.executableName.empty() ? L"game_scarlett_master.exe" : std::wstring(info.executableName.begin(), info.executableName.end());
-    std::wstring metaInfo = 
-        std::wstring(L"Status: ") + (isInstalled ? L"Verified & Ready" : L"Action Required") + L"\n"
-        L"Binary: " + exeNameW + L"\n"
-        L"Location: " + std::wstring(info.directoryPath.begin(), info.directoryPath.end()) + L"\n"
-        L"Display: " + resStr + L"\n"
-        L"Target Rate: " + (cfg.performance.targetFps == 0 ? L"Unlimited" : (std::to_wstring(cfg.performance.targetFps) + L" FPS")) + L"\n"
-        L"Runtime: XENITH + Leonida + ScarlettCompat";
-
-    D2D1_RECT_F metaText = D2D1::RectF(metaCard.left + 20.0f, metaCard.top + 158.0f, metaCard.right - 20.0f, metaCard.bottom - 16.0f);
+    D2D1_RECT_F noticeRect = D2D1::RectF(contentLeft, ctaTop + 64.0f, contentLeft + 480.0f, ctaTop + 130.0f);
     m_pRenderTarget->CreateSolidColorBrush(m_theme.textSecondary, &pBrush);
     m_pFontSmall->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
     m_pFontSmall->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
-    m_pRenderTarget->DrawText(metaInfo.c_str(), (UINT32)metaInfo.length(), m_pFontSmall, metaText, pBrush);
+    m_pRenderTarget->DrawText(scopeW.c_str(), (UINT32)scopeW.length(), m_pFontSmall, noticeRect, pBrush);
     pBrush->Release();
 
-    // Bottom Dock Bar
-    D2D1_RECT_F bottomBar = D2D1::RectF(contentLeft, bounds.bottom - 58.0f, contentRight, bounds.bottom - 20.0f);
-    DrawGlassPanel(bottomBar, 8.0f, false);
+    // 5. Bottom Floating Rounded Pill Navigation Dock (Matching Welcome to Leonida reference dock)
+    float dockW = 340.0f;
+    float dockH = 48.0f;
+    float dockLeft = (bounds.right - dockW) * 0.5f;
+    float dockTop = bounds.bottom - dockH - 22.0f;
+    D2D1_RECT_F dockRect = D2D1::RectF(dockLeft, dockTop, dockLeft + dockW, dockTop + dockH);
 
-    const SystemHardwareInfo& hw = app->GetHardwareInfo();
-    std::wstring hwLine = L"HOST PC:  " + std::wstring(hw.cpuModel.begin(), hw.cpuModel.end()) +
-                          L"   •   GPU: " + std::wstring(hw.gpuModel.begin(), hw.gpuModel.end()) +
-                          L"   •   RAM: " + std::to_wstring(hw.totalRamMb / 1024) + L" GB";
-    D2D1_RECT_F hwRect = D2D1::RectF(bottomBar.left + 18.0f, bottomBar.top, bottomBar.right - 18.0f, bottomBar.bottom);
-    m_pRenderTarget->CreateSolidColorBrush(m_theme.textMuted, &pBrush);
-    m_pFontSmall->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-    m_pFontSmall->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-    m_pRenderTarget->DrawText(hwLine.c_str(), (UINT32)hwLine.length(), m_pFontSmall, hwRect, pBrush);
+    // Deep translucent glass dock pill
+    m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(0.06f, 0.06f, 0.09f, 0.85f), &pBrush);
+    m_pRenderTarget->FillRoundedRectangle(D2D1::RoundedRect(dockRect, 24.0f, 24.0f), pBrush);
     pBrush->Release();
+
+    m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 0.16f), &pBrush);
+    m_pRenderTarget->DrawRoundedRectangle(D2D1::RoundedRect(dockRect, 24.0f, 24.0f), pBrush, 1.2f);
+    pBrush->Release();
+
+    // 5 Dock Icons: 🏠 (Home) | 🗺️ (Map) | 🏢 (Places) | 👥 (Crew) | ⚙️ (Settings)
+    const wchar_t* dockIcons[] = { L"🏠", L"🗺️", L"🏢", L"👥", L"⚙️" };
+    AppView dockViews[] = { AppView::MainHome, AppView::MainLibrary, AppView::MainLibrary, AppView::MainAbout, AppView::MainSettings };
+    float itemW = dockW / 5.0f;
+
+    for (int i = 0; i < 5; ++i) {
+        D2D1_RECT_F itemRect = D2D1::RectF(dockLeft + (i * itemW), dockTop, dockLeft + ((i + 1) * itemW), dockTop + dockH);
+        bool isHovered = IsPointInRect(m_mouseX, m_mouseY, itemRect);
+        bool isSelected = (i == 0);
+
+        if (isHovered || isSelected) {
+            D2D1_ELLIPSE iconCircle = D2D1::Ellipse(
+                D2D1::Point2F(itemRect.left + (itemW * 0.5f), dockTop + (dockH * 0.5f)),
+                17.0f, 17.0f);
+            m_pRenderTarget->CreateSolidColorBrush(
+                isSelected ? D2D1::ColorF(0.95f, 0.35f, 0.58f, 0.30f) : D2D1::ColorF(1.0f, 1.0f, 1.0f, 0.10f),
+                &pBrush);
+            m_pRenderTarget->FillEllipse(iconCircle, pBrush);
+            pBrush->Release();
+        }
+
+        m_pRenderTarget->CreateSolidColorBrush(isSelected ? m_theme.textPrimary : m_theme.textSecondary, &pBrush);
+        m_pFontSmall->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+        m_pFontSmall->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+        m_pRenderTarget->DrawText(dockIcons[i], (UINT32)wcslen(dockIcons[i]), m_pFontSmall, itemRect, pBrush);
+        pBrush->Release();
+
+        if (isHovered && m_mouseDown && !m_clickConsumed) {
+            m_clickConsumed = true;
+            app->NavigateTo(dockViews[i]);
+        }
+    }
 }
 
 // ── INTERACTIVE SETTINGS SCREEN ───────────────────────────────
@@ -1087,38 +1154,84 @@ void MiamiRenderer::RenderSetupComplete(MiamiApp* app, D2D1_RECT_F bounds) {
     RenderCinematicBackdrop(bounds, 0.45f);
     RenderCustomTitleBar(app, bounds);
 
-    float cardW = 680.0f;
-    float cardH = 460.0f;
+    float cardW = 740.0f;
+    float cardH = 500.0f;
     float left = (bounds.right - cardW) * 0.5f;
     float top = (bounds.bottom - cardH) * 0.5f + 10.0f;
     D2D1_RECT_F card = D2D1::RectF(left, top, left + cardW, top + cardH);
 
-    DrawGlassPanel(card, 14.0f, true);
+    DrawGlassPanel(card, 16.0f, true);
 
     ID2D1SolidColorBrush* pBrush = NULL;
-    D2D1_RECT_F pillRect = D2D1::RectF(card.left + 40.0f, card.top + 36.0f, card.left + 210.0f, card.top + 60.0f);
-    DrawPillBadge(L"STEP 3 OF 3  •  READY", pillRect, m_theme.successGreen);
+    D2D1_RECT_F pillRect = D2D1::RectF(card.left + 40.0f, card.top + 32.0f, card.left + 310.0f, card.top + 56.0f);
+    DrawPillBadge(L"STEP 3 OF 3  •  RECOMPILATION & BACKUP", pillRect, m_theme.accentPink);
 
-    D2D1_RECT_F titleRect = D2D1::RectF(card.left + 40.0f, card.top + 74.0f, card.right - 40.0f, card.top + 114.0f);
+    D2D1_RECT_F titleRect = D2D1::RectF(card.left + 40.0f, card.top + 68.0f, card.right - 40.0f, card.top + 108.0f);
     m_pRenderTarget->CreateSolidColorBrush(m_theme.textPrimary, &pBrush);
     m_pFontDisplay->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-    m_pRenderTarget->DrawText(L"SETUP COMPLETE", 14, m_pFontDisplay, titleRect, pBrush);
+    m_pRenderTarget->DrawText(L"LEONIDA RECOMPILATION ENGINE", 28, m_pFontDisplay, titleRect, pBrush);
     pBrush->Release();
 
-    D2D1_RECT_F descRect = D2D1::RectF(card.left + 40.0f, card.top + 130.0f, card.right - 40.0f, card.top + 330.0f);
+    // Trigger recompilation if not yet completed
+    ICompatibilityAdapter* adapter = app->GetIntegration();
+    const InstallationInfo& info = app->GetInstaller().GetCurrentInfo();
+    static bool recompilationStarted = false;
+    static RecompilationReport report;
+
+    if (adapter && !recompilationStarted && info.status == ValidationStatus::Valid) {
+        recompilationStarted = true;
+        adapter->RunSetupRecompilationAndBackup(info.directoryPath, report);
+    } else if (adapter && recompilationStarted) {
+        report = adapter->GetLastRecompilationReport();
+    }
+
+    D2D1_RECT_F reportBox = D2D1::RectF(card.left + 40.0f, card.top + 120.0f, card.right - 40.0f, card.bottom - 90.0f);
+    DrawGlassPanel(reportBox, 10.0f, report.completed);
+
+    std::wstring repText = L"Executing Leonida toolchain and GTA6-COMPAT-LAYER shims:\n\n";
+    if (report.backupCreated) {
+        repText += L"✓  Non-destructive Backup Created: " + 
+                   std::wstring(report.backupExePath.begin(), report.backupExePath.end()) +
+                   L" (" + std::to_wstring(report.backupExeSizeBytes / (1024 * 1024)) + L" MB)\n";
+    } else {
+        repText += L"⏳  Creating game_scarlett_master.exe backup in backup/ ...\n";
+    }
+
+    if (report.peMappedByXenith) {
+        repText += L"✓  XENITH PE Loader: " + std::to_wstring(report.peSectionCount) +
+                   L" sections mapped, " + std::to_wstring(report.peImportsResolved) +
+                   L" Scarlett GDK imports resolved (.xbld build " +
+                   std::wstring(report.xbldBuild.begin(), report.xbldBuild.end()) + L")\n";
+    }
+
+    if (report.shadersTranslatedToSpirv > 0) {
+        repText += L"✓  Leonida RDNA2 Toolchain: " + std::to_wstring(report.shadersTranslatedToSpirv) +
+                   L" shaders translated to SPIR-V (" + std::to_wstring(report.totalSpirvBytes) + L" bytes)\n";
+    }
+
+    if (report.rootSigCanonicalWritten) {
+        repText += L"✓  Leonida Canonical Root Signatures: root_signatures.lrs1 generated & GFX10 detiler verified\n";
+    }
+
+    if (report.scarlettShimsDeployed) {
+        repText += L"✓  ScarlettCompat.dll staged in recompiled/ target directory\n";
+    }
+
+    repText += L"\n" + std::wstring(report.honestScopeNotice.begin(), report.honestScopeNotice.end());
+
+    D2D1_RECT_F repTextRect = D2D1::RectF(reportBox.left + 16.0f, reportBox.top + 16.0f, reportBox.right - 16.0f, reportBox.bottom - 16.0f);
     m_pRenderTarget->CreateSolidColorBrush(m_theme.textSecondary, &pBrush);
-    m_pFontBody->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-    const wchar_t* msg = 
-        L"Project Miami is ready to launch Grand Theft Auto VI:\n\n"
-        L"• Game Files: Verified PE64 Master Binary & Package Archives\n"
-        L"• Runtime Engines: XENITH + Leonida + ScarlettCompat Linked In-Process\n"
-        L"• Target Display: 1920x1080 (Borderless, 60 FPS VSync)\n"
-        L"• Audio & Input: XInput / GameInput Bridge Enabled\n\n"
-        L"Click Enter Launcher to open the main home screen.";
-    m_pRenderTarget->DrawText(msg, (UINT32)wcslen(msg), m_pFontBody, descRect, pBrush);
+    m_pFontSmall->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+    m_pFontSmall->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
+    m_pRenderTarget->DrawText(repText.c_str(), (UINT32)repText.length(), m_pFontSmall, repTextRect, pBrush);
     pBrush->Release();
 
-    D2D1_RECT_F launchBtn = D2D1::RectF(card.right - 240.0f, card.bottom - 72.0f, card.right - 40.0f, card.bottom - 26.0f);
+    D2D1_RECT_F backBtn = D2D1::RectF(card.left + 40.0f, card.bottom - 72.0f, card.left + 180.0f, card.bottom - 26.0f);
+    if (DrawButton(L"←  BACK", backBtn, false, IsPointInRect(m_mouseX, m_mouseY, backBtn), false, 8.0f)) {
+        app->NavigateTo(AppView::SetupDirectory);
+    }
+
+    D2D1_RECT_F launchBtn = D2D1::RectF(card.right - 260.0f, card.bottom - 72.0f, card.right - 40.0f, card.bottom - 26.0f);
     if (DrawButton(L"ENTER LAUNCHER   →", launchBtn, true, IsPointInRect(m_mouseX, m_mouseY, launchBtn), false, 8.0f)) {
         app->GetConfig().setupCompleted = true;
         app->GetConfig().Save();

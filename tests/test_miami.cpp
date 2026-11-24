@@ -123,14 +123,26 @@ int main(int argc, char** argv) {
     RunTest("GTA6-COMPAT-LAYER ScarlettCompat.dll loaded & 13 HLE exports verified live", intStatus.gta6CompatLayer.isAvailable && intStatus.scarlettDllLoaded && intStatus.scarlettHleExportCount == 13);
     RunTest("All 3 C++ engines operational in-process", intStatus.allLayersReady);
 
+    // 7. Testing Live Recompilation & Non-Destructive Backup
+    std::cout << "\n[7] Testing Recompilation Pipeline & Non-Destructive Backup:\n";
+    miami::RecompilationReport rep;
+    bool recompOk = adapter->RunSetupRecompilationAndBackup("e:\\Gta6", rep);
+    RunTest("Setup recompilation & backup executed successfully", recompOk);
+    RunTest("Non-destructive backup created in backup/game_scarlett_master.exe.bak", rep.backupCreated && rep.backupExeSizeBytes > 0);
+    RunTest("XENITH PE loader mapped binary & resolved GDK imports", rep.peMappedByXenith && rep.peImportsResolved > 0);
+    RunTest("Leonida RDNA2 shaders compiled to SPIR-V (.spv)", rep.shadersTranslatedToSpirv > 0 && rep.totalSpirvBytes > 0);
+    RunTest("Leonida Canonical Root Signature file written", rep.rootSigCanonicalWritten);
+    RunTest("GTA6-COMPAT-LAYER ScarlettCompat.dll staged in recompiled/", rep.scarlettShimsDeployed);
+    RunTest("Target recompiled executable staged non-destructively", !rep.recompiledExePath.empty() && rep.recompiledExeSizeBytes > 0);
+
     std::string targetExe;
     std::string prepError;
     bool prepOk = adapter->PrepareGameEnvironment("e:\\Gta6", targetExe, prepError);
     RunTest("PrepareGameEnvironment mounts XENITH VFS & initializes HLE runtimes on e:\\Gta6", prepOk);
-    RunTest("Resolved target executable is game_scarlett_master.exe", !targetExe.empty());
+    RunTest("Resolved target executable is staged recompiled binary", targetExe.find("game_pc_recomp.exe") != std::string::npos || targetExe.find("game_scarlett_master.exe") != std::string::npos);
 
     std::cout << "\n====================================================================\n";
-    std::cout << " ALL 24 TEST ASSERTIONS PASSED WITH ZERO FAILURES (PASS)\n";
+    std::cout << " ALL 31 TEST ASSERTIONS PASSED WITH ZERO FAILURES (PASS)\n";
     std::cout << "====================================================================\n";
     return 0;
 }

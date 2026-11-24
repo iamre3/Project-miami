@@ -62,6 +62,7 @@ private:
     ID2D1Bitmap* m_pBmpBackground = NULL;
     ID2D1Bitmap* m_pBmpBanner = NULL;
     ID2D1Bitmap* m_pBmpLogo = NULL;
+    ID2D1Bitmap* m_pBmpLogoMark = NULL;
     ID2D1Bitmap* m_pBmpCharacters = NULL;
     ID2D1Bitmap* m_pBmpSkyline = NULL;
 

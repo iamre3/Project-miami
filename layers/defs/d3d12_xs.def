@@ -1,0 +1,6 @@
+LIBRARY d3d12_xs
+EXPORTS
+    D3D12XboxCreateDevice
+    SetFrameIntervalX
+    ScheduleFrameEventX
+    WaitFrameEventX
